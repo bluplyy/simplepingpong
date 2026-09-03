@@ -41,7 +41,7 @@ npm install
 ### 3. Konfigurasi Environment Variable
 File `.env` sudah terisi dengan kredensial Supabase aktif:
 ```env
-VITE_SUPABASE_URL=https://xalqbiwooasmjbscccwx.supabase.co
+VITE_SUPABASE_URL=https://eakwpdrmrwjksyknhlgy.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
@@ -134,8 +134,8 @@ Proyek ini sudah dilengkapi file `vercel.json` sehingga langsung siap dideploy k
 2. Klik tombol **"Add New..."** -> **"Project"**.
 3. Pilih repositori `simple-pingpong-noir` yang baru saja Anda push ke GitHub.
 4. Pada bagian **Environment Variables**, tambahkan 2 variabel berikut:
-   - `VITE_SUPABASE_URL`: `https://xalqbiwooasmjbscccwx.supabase.co`
-   - `VITE_SUPABASE_ANON_KEY`: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhbHFiaXdvb2FzbWpic2NjY3d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MTM3OTYsImV4cCI6MjEwMDM4OTc5Nn0.GgPq14jG7NPSosyCx1qORkLNL057WiePxKd-J90zifg`
+   - `VITE_SUPABASE_URL`: `https://eakwpdrmrwjksyknhlgy.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY`: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVha3dwZHJtcndqa3N5a25obGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTY2MzIsImV4cCI6MjEwMzk3MjYzMn0.VTwVFEzHvWJDNRgITnEMgYW_XPjGJe8Zek6OA_E9UlI`
 5. Klik **"Deploy"**. Vercel akan otomatis melakukan build dan memberikan tautan URL publik (misal: `simple-pingpong-noir.vercel.app`).
 6. Setiap kali Anda melakukan `git push`, Vercel akan otomatis meng-update aplikasinya!
 
