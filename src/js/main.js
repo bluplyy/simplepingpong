@@ -236,13 +236,50 @@ document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
   });
 });
 
+let isCountingDown = false;
+let localCountdownTimer = null;
+
+function runStartCountdown(onComplete) {
+  if (isCountingDown) return;
+  isCountingDown = true;
+
+  let count = 3;
+  arenaOverlay.classList.add('hidden');
+  showCountdown(count);
+  soundManager.playButtonTick();
+
+  if (localCountdownTimer) clearInterval(localCountdownTimer);
+  localCountdownTimer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      showCountdown(count);
+      soundManager.playButtonTick();
+    } else {
+      clearInterval(localCountdownTimer);
+      localCountdownTimer = null;
+      showCountdown('START!');
+      soundManager.playScorePoint();
+      setTimeout(() => {
+        countdownOverlay.classList.add('hidden');
+        isCountingDown = false;
+        if (typeof onComplete === 'function') {
+          onComplete();
+        }
+      }, 600);
+    }
+  }, 1000);
+}
+
 // Start & Restart & Stop/Resume Game Controls
 btnPlayPauseGame.addEventListener('click', () => {
   soundManager.playButtonTick();
+  if (isCountingDown) return;
+
   if (!game.isRunning) {
-    arenaOverlay.classList.add('hidden');
-    game.start();
-    showToast('Game Dimulai');
+    runStartCountdown(() => {
+      game.start();
+      showToast('Game Dimulai');
+    });
   } else {
     game.togglePause();
     if (game.isPaused) {
@@ -255,8 +292,10 @@ btnPlayPauseGame.addEventListener('click', () => {
 
 btnStartGame.addEventListener('click', () => {
   soundManager.playButtonTick();
-  arenaOverlay.classList.add('hidden');
-  game.start();
+  if (isCountingDown) return;
+  runStartCountdown(() => {
+    game.start();
+  });
 });
 
 btnRestartGame.addEventListener('click', () => {
@@ -268,8 +307,11 @@ btnRestartGame.addEventListener('click', () => {
 
 btnPlayAgain.addEventListener('click', () => {
   closeModal(modalGameOver);
-  game.start();
-  arenaOverlay.classList.add('hidden');
+  if (isCountingDown) return;
+  runStartCountdown(() => {
+    game.start();
+    arenaOverlay.classList.add('hidden');
+  });
 });
 
 btnViewRankingsFromGameOver.addEventListener('click', () => {
