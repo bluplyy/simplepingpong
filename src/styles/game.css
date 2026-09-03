@@ -309,24 +309,49 @@ canvas#gameCanvas {
   animation: pulseDot 1s infinite alternate;
 }
 
-/* Online Countdown Overlay */
+/* Online & Local Countdown Overlay */
 .countdown-number {
   font-family: var(--font-display);
-  font-size: 72px;
+  font-size: 88px;
   color: #ffffff;
-  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
-  animation: countdownPop 0.8s ease-out infinite;
+  text-shadow: 0 0 35px rgba(255, 255, 255, 0.9);
+  line-height: 1;
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.countdown-number.is-start {
+  font-size: 58px;
+  letter-spacing: 4px;
+}
+
+.countdown-number.pop-anim {
+  animation: countdownPop 0.92s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes countdownPop {
-  0% { transform: scale(0.6); opacity: 0.3; }
-  50% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1.0);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
 }
 
 .countdown-text {
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text-secondary);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }

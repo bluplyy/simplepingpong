@@ -268,7 +268,7 @@ function runStartCountdown(onComplete) {
         if (typeof onComplete === 'function') {
           onComplete();
         }
-      }, 600);
+      }, 900);
     }
   }, 1000);
 }
@@ -667,7 +667,7 @@ function triggerCountdownSequence() {
         countdownOverlay.classList.add('hidden');
         multiplayerManager.sendGameStart();
         startOnlineMatchGame();
-      }, 700);
+      }, 900);
     }
   }, 1000);
 }
@@ -675,7 +675,18 @@ function triggerCountdownSequence() {
 function showCountdown(val) {
   countdownOverlay.classList.remove('hidden');
   countdownNumber.textContent = val;
-  countdownSubtext.textContent = val === 'START!' ? 'SEMOGA BERHASIL!' : 'Pertandingan Dimulai Dalam...';
+  if (val === 'START!') {
+    countdownSubtext.textContent = 'SEMOGA BERHASIL!';
+    countdownNumber.classList.add('is-start');
+  } else {
+    countdownSubtext.textContent = 'Pertandingan Dimulai Dalam...';
+    countdownNumber.classList.remove('is-start');
+  }
+
+  // Trigger ulang animasi secara presisi pada setiap detik
+  countdownNumber.classList.remove('pop-anim');
+  void countdownNumber.offsetWidth; // force browser reflow
+  countdownNumber.classList.add('pop-anim');
 }
 
 function startOnlineMatchGame() {
