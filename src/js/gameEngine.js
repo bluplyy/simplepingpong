@@ -16,6 +16,7 @@ export class GameEngine {
     // Game states
     this.isRunning = false;
     this.isPaused = false;
+    this.animFrameId = null;
     this.gameMode = 'vs_ai'; // 'vs_ai' | 'rally' | 'online_pvp'
     this.difficulty = 'normal'; // 'easy' | 'normal' | 'hard'
     this.winningScore = 7;
@@ -235,15 +236,20 @@ export class GameEngine {
   }
 
   start() {
+    this.stop(); // Batalkan loop sebelumnya jika sedang berjalan agar tidak terjadi penumpukan frame
     this.resetMatch();
     this.isRunning = true;
     this.isPaused = false;
     this.lastTime = performance.now();
-    requestAnimationFrame((t) => this.loop(t));
+    this.animFrameId = requestAnimationFrame((t) => this.loop(t));
   }
 
   stop() {
     this.isRunning = false;
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
   }
 
   togglePause() {
@@ -251,7 +257,6 @@ export class GameEngine {
     this.isPaused = !this.isPaused;
     if (!this.isPaused) {
       this.lastTime = performance.now();
-      requestAnimationFrame((t) => this.loop(t));
     }
   }
 
@@ -680,15 +685,20 @@ export class GameEngine {
   }
 
   loop(timestamp) {
-    if (!this.isRunning) return;
+    if (!this.isRunning) {
+      this.animFrameId = null;
+      return;
+    }
 
     if (!this.isPaused) {
       const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
       this.update(dt);
       this.render();
+    } else {
+      this.render();
     }
 
     this.lastTime = timestamp;
-    requestAnimationFrame((t) => this.loop(t));
+    this.animFrameId = requestAnimationFrame((t) => this.loop(t));
   }
 }
