@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Ping Pong Monochrome | Retro Arcade Game & Global Leaderboard</title>
+  <meta name="description" content="Website Game Simple Ping Pong dengan tema minimalis hitam putih, audio 8-bit prosedural, papan peringkat global Supabase, dan sistem autentikasi.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="stylesheet" href="/src/styles/game.css">
+  <link rel="stylesheet" href="/src/styles/modal.css">
+  <link rel="stylesheet" href="/src/styles/responsive.css">
+</head>
+<body>
+
+  <!-- Optional CRT Scanlines Effect -->
+  <div id="scanlinesOverlay" class="scanlines-overlay"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <div class="paddle"></div>
+        <div class="dot"></div>
+        <div class="paddle"></div>
+      </div>
+      <h1 class="brand-title">PONG // NOIR</h1>
+    </div>
+
+    <div class="header-actions">
+      <!-- Audio Toggle -->
+      <button id="btnSoundToggle" class="btn btn-secondary btn-icon" title="Toggle Suara" aria-label="Toggle Suara">
+        <span id="soundIcon">[♪]</span>
+      </button>
+
+      <!-- Scanline Toggle -->
+      <button id="btnScanlineToggle" class="btn btn-secondary btn-icon" title="Toggle CRT Scanline" aria-label="Toggle Scanline">
+        <span>[CRT]</span>
+      </button>
+
+      <!-- Online 1v1 Button -->
+      <button id="btnOpenOnlineLobby" class="btn btn-secondary">
+        <span>[NET]</span>
+        <span class="btn-text">Online 1v1</span>
+      </button>
+
+      <!-- Leaderboard Button -->
+      <button id="btnOpenLeaderboard" class="btn btn-secondary">
+        <span>[TOP]</span>
+        <span class="btn-text">Rankings</span>
+      </button>
+
+      <!-- Auth / Profile Button -->
+      <div id="authContainer">
+        <button id="btnOpenAuth" class="btn btn-primary">
+          <span>[USR]</span>
+          <span class="btn-text">Login</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Game Content -->
+  <main class="main-wrapper">
+    <section class="game-stage-container">
+      
+      <!-- Top Controls & Mode Switcher -->
+      <div class="game-controls-bar" id="gameControlsBar">
+        <div class="controls-group" id="offlineModeControls">
+          <span class="control-label">Mode:</span>
+          <div class="segmented-control" id="modeSelector">
+            <button class="segmented-btn active" data-mode="vs_ai">VS AI</button>
+            <button class="segmented-btn" data-mode="rally">Solo Rally</button>
+          </div>
+        </div>
+
+        <div class="controls-group" id="difficultyGroup">
+          <span class="control-label">Level:</span>
+          <div class="segmented-control" id="difficultySelector">
+            <button class="segmented-btn" data-diff="easy">Rookie</button>
+            <button class="segmented-btn active" data-diff="normal">Pro</button>
+            <button class="segmented-btn" data-diff="hard">Master</button>
+          </div>
+        </div>
+
+        <!-- Online Match Info (Ditampilkan saat mode Online aktif) -->
+        <div class="controls-group" id="onlineMatchBar" style="display: none;">
+          <div class="online-indicator-pill">
+            <span class="online-live-dot"></span>
+            <span id="onlineRoomCodeDisplay">ROOM: -</span>
+          </div>
+          <button id="btnExitOnlineMatch" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">
+            Keluar Match
+          </button>
+        </div>
+
+        <div class="controls-group" id="resetGroup">
+          <button id="btnRestartGame" class="btn btn-secondary" title="Mulai Ulang">
+            <span>↺</span> Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- HUD Scoreboard -->
+      <div class="game-hud">
+        <div class="hud-player-block">
+          <div class="hud-tag">
+            <span class="indicator"></span>
+            <span id="hudPlayerName">PLAYER</span>
+          </div>
+          <div class="hud-score-display" id="hudPlayerScore">0</div>
+        </div>
+
+        <div class="hud-center-block">
+          <div class="hud-vs-divider">VS</div>
+          <div class="hud-rally-badge">
+            <span>RALLY</span>
+            <span class="rally-num" id="hudRallyCount">0</span>
+          </div>
+        </div>
+
+        <div class="hud-player-block right">
+          <div class="hud-tag">
+            <span id="hudOpponentName">CPU [PRO]</span>
+            <span class="indicator ai"></span>
+          </div>
+          <div class="hud-score-display" id="hudAiScore">0</div>
+        </div>
+      </div>
+
+      <!-- Canvas Game Arena -->
+      <div class="arena-wrapper" id="arenaWrapper">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <!-- Start Game Overlay -->
+        <div id="arenaOverlay" class="arena-overlay">
+          <h2 class="overlay-title">PONG // NOIR</h2>
+          <p class="overlay-subtitle">
+            Kendalikan paddle kiri menggunakan keyboard, mouse, atau layar sentuh. Capai skor target atau rally terpanjang!
+          </p>
+          <div class="overlay-actions">
+            <button id="btnStartGame" class="btn btn-primary" style="padding: 12px 24px; font-size: 14px;">
+              ► MULAI MAIN
+            </button>
+          </div>
+        </div>
+
+        <!-- Online Countdown Overlay -->
+        <div id="countdownOverlay" class="arena-overlay hidden">
+          <div class="countdown-number" id="countdownNumber">3</div>
+          <div class="countdown-text" id="countdownSubtext">Bersiap! Pertandingan Dimulai...</div>
+        </div>
+      </div>
+
+      <!-- Mobile Touch Controls (Muncul di layar HP & Tablet) -->
+      <div class="mobile-touch-zones" id="mobileTouchZones">
+        <button id="touchUpBtn" class="touch-zone-btn" aria-label="Geser Naik">
+          ▲ NAIK
+        </button>
+        <button id="touchDownBtn" class="touch-zone-btn" aria-label="Geser Turun">
+          ▼ TURUN
+        </button>
+      </div>
+
+      <!-- Desktop Keyboard Legend -->
+      <div class="controls-legend">
+        <div class="legend-item">
+          <span class="key-badge">W</span> / <span class="key-badge">S</span> atau <span class="key-badge">↑</span> / <span class="key-badge">↓</span> : Gerak Paddle
+        </div>
+        <div class="legend-item">
+          <span class="key-badge">Mouse</span> : Arahkan kursor
+        </div>
+        <div class="legend-item">
+          <span class="key-badge">Touch</span> : Geser layar di HP/Tablet
+        </div>
+        <div class="legend-item">
+          <span class="key-badge">SPACE</span> : Jeda / Lanjut
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-status">
+      <span>● SYSTEM: ONLINE</span>
+    </div>
+    <div class="footer-credits">
+      Monochrome Arcade Edition • Powered by Supabase & Vercel
+    </div>
+  </footer>
+
+  <!-- Modal Online Lobby (Quick Match & Private Room) -->
+  <div id="modalOnlineLobby" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>[NET]</span> ONLINE MULTIPLAYER 1 VS 1
+        </div>
+        <button class="modal-close-btn" data-close="modalOnlineLobby" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="online-nav-tabs">
+          <button class="online-nav-btn active" id="tabQuickMatch">» Cari Lawan Acak</button>
+          <button class="online-nav-btn" id="tabPrivateRoom"># Main Sama Teman</button>
+        </div>
+
+        <!-- Quick Match Section -->
+        <div id="sectionQuickMatch" class="online-section">
+          <div class="matchmaking-panel" id="panelQuickMatchInitial">
+            <p class="section-desc">
+              Sistem akan otomatis mencarikan lawan pemain lain secara online di seluruh dunia yang sedang siap bertanding.
+            </p>
+            <button id="btnStartQuickMatch" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 13px;">
+              » CARI LAWAN SEKARANG
+            </button>
+          </div>
+
+          <!-- Searching Radar State -->
+          <div class="radar-container" id="panelQuickMatchSearching" style="display: none;">
+            <div class="radar-circle">
+              <div class="radar-sweep"></div>
+              <div class="radar-dot"></div>
+            </div>
+            <div class="radar-text" id="quickMatchStatusText">Mencari lawan online...</div>
+            <div class="radar-subtext">Menunggu pemain lain bergabung ke antrian</div>
+            <button id="btnCancelQuickMatch" class="btn btn-secondary" style="margin-top: 14px; width: 100%;">
+              Batal Mencari
+            </button>
+          </div>
+        </div>
+
+        <!-- Private Room Section -->
+        <div id="sectionPrivateRoom" class="online-section" style="display: none;">
+          <div class="private-room-subtabs">
+            <button class="subtab-btn active" id="subtabCreateRoom">Buat Room</button>
+            <button class="subtab-btn" id="subtabJoinRoom">Gabung Room</button>
+          </div>
+
+          <!-- Subtab: Create Room -->
+          <div id="subpanelCreateRoom" class="subpanel">
+            <div class="room-code-box">
+              <span class="room-code-label">KODE ROOM ANDA:</span>
+              <div class="room-code-display" id="displayRoomCode">------</div>
+              <button id="btnCopyInviteLink" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+                [COPY] Salin Tautan Undangan
+              </button>
+            </div>
+            <div class="room-players-status">
+              <div class="player-slot">
+                <span class="slot-badge host">HOST</span>
+                <span id="slotHostName" class="slot-name">Kamu</span>
+                <span class="slot-status">[OK] Siap</span>
+              </div>
+              <div class="player-slot">
+                <span class="slot-badge guest">GUEST</span>
+                <span id="slotGuestName" class="slot-name">Menunggu lawan...</span>
+                <span class="slot-status waiting" id="slotGuestStatus">[...] Menunggu</span>
+              </div>
+            </div>
+            <button id="btnCancelCreateRoom" class="btn btn-secondary" style="width: 100%; margin-top: 8px;">
+              Tutup Room
+            </button>
+          </div>
+
+          <!-- Subtab: Join Room -->
+          <div id="subpanelJoinRoom" class="subpanel" style="display: none;">
+            <p class="section-desc">Masukkan kode room 6-8 karakter dari teman Anda.</p>
+            <div class="form-group">
+              <label class="form-label" for="inputRoomCode">Kode Room</label>
+              <input type="text" id="inputRoomCode" class="form-input" placeholder="contoh: NOIR-482" maxlength="12" style="text-transform: uppercase; font-weight: bold; letter-spacing: 2px;">
+            </div>
+            <div id="joinRoomAlert" class="auth-alert" style="margin-top: 6px;"></div>
+            <button id="btnSubmitJoinRoom" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 10px;">
+              GABUNG PERTANDINGAN
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Leaderboard -->
+  <div id="modalLeaderboard" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>[TOP]</span> GLOBAL LEADERBOARD
+        </div>
+        <button class="modal-close-btn" data-close="modalLeaderboard" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="leaderboard-tabs">
+          <button class="leaderboard-tab-btn active" data-lead-mode="vs_ai">Mode VS AI</button>
+          <button class="leaderboard-tab-btn" data-lead-mode="rally">Mode Solo Rally</button>
+          <button class="leaderboard-tab-btn" data-lead-mode="online_pvp">[NET] Online PvP</button>
+        </div>
+
+        <div class="leaderboard-table-container">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">Rank</th>
+                <th>Pemain</th>
+                <th style="text-align: right;">Skor</th>
+                <th style="text-align: right;">Max Rally</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardList">
+              <tr>
+                <td colspan="4" class="empty-leaderboard">Memuat data papan peringkat...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Auth (Login & Register) -->
+  <div id="modalAuth" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>[AUTH]</span> AUTENTIKASI SUPABASE
+        </div>
+        <button class="modal-close-btn" data-close="modalAuth" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" id="tabAuthLogin">Masuk (Login)</button>
+          <button class="auth-tab-btn" id="tabAuthRegister">Daftar Akun</button>
+        </div>
+
+        <div id="authAlert" class="auth-alert"></div>
+
+        <form id="authForm" class="auth-form">
+          <div class="form-group" id="groupUsername" style="display: none;">
+            <label class="form-label" for="inputUsername">Username / Panggilan</label>
+            <input type="text" id="inputUsername" class="form-input" placeholder="contoh: NOIR_ACE" maxlength="15">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputEmail">Email</label>
+            <input type="email" id="inputEmail" class="form-input" placeholder="player@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputPassword">Password</label>
+            <input type="password" id="inputPassword" class="form-input" placeholder="Minimal 6 karakter" required minlength="6">
+          </div>
+
+          <button type="submit" id="btnSubmitAuth" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 6px;">
+            MASUK
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Game Over -->
+  <div id="modalGameOver" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>[FIN]</span> HASIL PERTANDINGAN
+        </div>
+        <button class="modal-close-btn" data-close="modalGameOver" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="gameover-summary">
+          <h3 id="gameoverResultTitle" class="gameover-result-title won">KAMU MENANG!</h3>
+          <p id="gameoverResultDesc" class="overlay-subtitle">Pertandingan selesai dengan performa gemilang.</p>
+
+          <div class="gameover-stats-grid">
+            <div class="stat-box">
+              <span class="stat-label">Skor Akhir</span>
+              <span id="statFinalScore" class="stat-value">7</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Rally Tertinggi</span>
+              <span id="statMaxRally" class="stat-value">12</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="saveScoreStatus" style="font-family: var(--font-mono); font-size: 11px; text-align: center; color: var(--text-secondary);">
+          Menyimpan skor ke database...
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button id="btnViewRankingsFromGameOver" class="btn btn-secondary" style="flex: 1;">
+            Lihat Rankings
+          </button>
+          <button id="btnPlayAgain" class="btn btn-primary" style="flex: 1;">
+            Main Lagi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Application Main Script -->
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>
