@@ -167,6 +167,13 @@ export class GameEngine {
     this.canvas.addEventListener('touchend', () => {
       this.touchActive = false;
     });
+
+    // Click canvas to resume when paused
+    this.canvas.addEventListener('click', () => {
+      if (this.isRunning && this.isPaused) {
+        this.togglePause();
+      }
+    });
   }
 
   setLocalPaddleTarget(virtualY) {
@@ -242,14 +249,17 @@ export class GameEngine {
     this.isPaused = false;
     this.lastTime = performance.now();
     this.animFrameId = requestAnimationFrame((t) => this.loop(t));
+    this.notifyStateChange();
   }
 
   stop() {
     this.isRunning = false;
+    this.isPaused = false;
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
     }
+    this.notifyStateChange();
   }
 
   togglePause() {
@@ -257,6 +267,16 @@ export class GameEngine {
     this.isPaused = !this.isPaused;
     if (!this.isPaused) {
       this.lastTime = performance.now();
+    }
+    this.notifyStateChange();
+  }
+
+  notifyStateChange() {
+    if (this.callbacks && this.callbacks.onStateChange) {
+      this.callbacks.onStateChange({
+        isRunning: this.isRunning,
+        isPaused: this.isPaused,
+      });
     }
   }
 
@@ -661,7 +681,7 @@ export class GameEngine {
       ctx.fillText('PAUSED', this.width / 2, this.height / 2 - 10);
       ctx.font = '14px "Space Grotesk", sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.fillText('Tekan SPASI atau sentuh layar untuk melanjutkan', this.width / 2, this.height / 2 + 25);
+      ctx.fillText('Tekan Mulai, SPASI, atau sentuh arena untuk lanjut', this.width / 2, this.height / 2 + 25);
     }
   }
 

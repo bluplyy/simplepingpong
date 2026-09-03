@@ -9,6 +9,9 @@ const canvas = document.getElementById('gameCanvas');
 const arenaOverlay = document.getElementById('arenaOverlay');
 const btnStartGame = document.getElementById('btnStartGame');
 const btnRestartGame = document.getElementById('btnRestartGame');
+const btnPlayPauseGame = document.getElementById('btnPlayPauseGame');
+const playPauseIcon = document.getElementById('playPauseIcon');
+const playPauseText = document.getElementById('playPauseText');
 
 const hudPlayerName = document.getElementById('hudPlayerName');
 const hudOpponentName = document.getElementById('hudOpponentName');
@@ -135,7 +138,27 @@ const game = new GameEngine(canvas, {
   onHostScoreSync: (scoreData) => {
     multiplayerManager.sendScoreUpdate(scoreData);
   },
+  onStateChange: ({ isRunning, isPaused }) => {
+    updatePlayPauseButtonUI(isRunning, isPaused);
+  },
 });
+
+function updatePlayPauseButtonUI(isRunning, isPaused) {
+  if (!btnPlayPauseGame || !playPauseIcon || !playPauseText) return;
+  if (!isRunning || isPaused) {
+    playPauseIcon.textContent = '►';
+    playPauseText.textContent = 'Mulai';
+    btnPlayPauseGame.classList.remove('btn-secondary');
+    btnPlayPauseGame.classList.add('btn-primary');
+    btnPlayPauseGame.title = 'Mulai / Lanjutkan Permainan';
+  } else {
+    playPauseIcon.textContent = '■';
+    playPauseText.textContent = 'Berhenti';
+    btnPlayPauseGame.classList.remove('btn-primary');
+    btnPlayPauseGame.classList.add('btn-secondary');
+    btnPlayPauseGame.title = 'Berhenti / Jeda Permainan';
+  }
+}
 
 // Game Over Handler
 async function handleGameOver(result) {
@@ -213,7 +236,23 @@ document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
   });
 });
 
-// Start & Restart Game
+// Start & Restart & Stop/Resume Game Controls
+btnPlayPauseGame.addEventListener('click', () => {
+  soundManager.playButtonTick();
+  if (!game.isRunning) {
+    arenaOverlay.classList.add('hidden');
+    game.start();
+    showToast('Game Dimulai');
+  } else {
+    game.togglePause();
+    if (game.isPaused) {
+      showToast('Game Dihentikan');
+    } else {
+      showToast('Game Dilanjutkan');
+    }
+  }
+});
+
 btnStartGame.addEventListener('click', () => {
   soundManager.playButtonTick();
   arenaOverlay.classList.add('hidden');
