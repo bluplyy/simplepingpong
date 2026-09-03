@@ -141,6 +141,9 @@ const game = new GameEngine(canvas, {
   onStateChange: ({ isRunning, isPaused }) => {
     updatePlayPauseButtonUI(isRunning, isPaused);
   },
+  onRequestTogglePause: () => {
+    handlePlayPauseToggle();
+  },
 });
 
 function updatePlayPauseButtonUI(isRunning, isPaused) {
@@ -270,24 +273,32 @@ function runStartCountdown(onComplete) {
   }, 1000);
 }
 
-// Start & Restart & Stop/Resume Game Controls
-btnPlayPauseGame.addEventListener('click', () => {
-  soundManager.playButtonTick();
+function handlePlayPauseToggle() {
   if (isCountingDown) return;
 
   if (!game.isRunning) {
+    // Game belum jalan sama sekali -> jalankan countdown 3 detik lalu start
     runStartCountdown(() => {
       game.start();
       showToast('Game Dimulai');
     });
-  } else {
-    game.togglePause();
-    if (game.isPaused) {
-      showToast('Game Dihentikan');
-    } else {
+  } else if (game.isPaused) {
+    // Game sedang berhenti/jeda -> jalankan countdown 3 detik lalu resume
+    runStartCountdown(() => {
+      game.togglePause();
       showToast('Game Dilanjutkan');
-    }
+    });
+  } else {
+    // Game sedang berjalan -> jeda seketika
+    game.togglePause();
+    showToast('Game Dihentikan');
   }
+}
+
+// Start & Restart & Stop/Resume Game Controls
+btnPlayPauseGame.addEventListener('click', () => {
+  soundManager.playButtonTick();
+  handlePlayPauseToggle();
 });
 
 btnStartGame.addEventListener('click', () => {

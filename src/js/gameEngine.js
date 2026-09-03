@@ -129,7 +129,11 @@ export class GameEngine {
       }
       if (e.code === 'Space') {
         e.preventDefault();
-        this.togglePause();
+        if (this.callbacks && this.callbacks.onRequestTogglePause) {
+          this.callbacks.onRequestTogglePause();
+        } else {
+          this.togglePause();
+        }
       }
     });
 
@@ -171,7 +175,11 @@ export class GameEngine {
     // Click canvas to resume when paused
     this.canvas.addEventListener('click', () => {
       if (this.isRunning && this.isPaused) {
-        this.togglePause();
+        if (this.callbacks && this.callbacks.onRequestTogglePause) {
+          this.callbacks.onRequestTogglePause();
+        } else {
+          this.togglePause();
+        }
       }
     });
   }
